@@ -16,7 +16,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-import javax.swing.SwingUtilities;
 
 public class GameManager {
     // HashMap to store user data 
@@ -31,10 +30,8 @@ public class GameManager {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            GameManager game = new GameManager();
-            new HangmanFrame(game).setVisible(true);
-        });
+        GameManager game = new GameManager();
+        new HangmanFrame(game).setVisible(true);
     }
     
     //load users from the file        
