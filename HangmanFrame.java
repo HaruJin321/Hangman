@@ -10,6 +10,7 @@ public class HangmanFrame extends JFrame {
     private GameManager gameManager;
     private DisplayManager displayManager;
     private InputManager inputManager;
+    private User currentUser;
     private JLabel wordLabel;
     private JTextField inputField;
     private JLabel messageLabel;
@@ -55,19 +56,34 @@ public class HangmanFrame extends JFrame {
 
         add(panel);
 
-        startNewGame();
+        askUsername();
     }
 
     private void startNewGame() 
     {
 
-        displayManager = new DisplayManager();
+        displayManager = new DisplayManager(currentUser);
         wordLabel.setText(displayManager.getGuessedLetters());
         maxGuess = 7;
-        scoreLabel.setText("Score: 0");
-        
+
     }
 
+    
+    private void askUsername() {
+        String username = JOptionPane.showInputDialog(this, "Enter your username:");
+        if (username != null && !username.trim().isEmpty()) {
+            currentUser = gameManager.checkUser(username.toLowerCase());
+            displayManager = new DisplayManager(currentUser);
+            //wordLabel.setText(displayManager.getGuessedLetters());
+            updateScoreLabel();
+            startNewGame();
+        } else {
+            JOptionPane.showInputDialog(this, "Please enter your username");
+
+        }
+    }
+    
+    
 
     private void handleGuess() {
         
@@ -96,23 +112,29 @@ public class HangmanFrame extends JFrame {
         
         if (maxGuess == 0) 
         {
+            currentUser.setScore(currentUser.getScore() - 10);
             messageLabel.setText("Loser! -10pts. The word was: " + displayManager.getWord());
             endGame();
         } 
         else if (!displayManager.getGuessedLetters().contains("_")) 
         {
+            currentUser.setScore(currentUser.getScore() + 10);
             messageLabel.setText("You win! +10pts. The word was: " + displayManager.getWord());
             endGame();
         }
-
+        
+        updateScoreLabel();
 
     }
 
-
+    private void updateScoreLabel() {
+        scoreLabel.setText("Score: " + currentUser.getScore());
+    }
 
     private void endGame() 
     {
         
+        gameManager.updateScore(currentUser);
         int option = JOptionPane.showConfirmDialog(this, "Play again?", "Game Over", JOptionPane.YES_NO_OPTION);
         
         if (option == JOptionPane.YES_OPTION) 
