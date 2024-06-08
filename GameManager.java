@@ -26,13 +26,10 @@ public class GameManager {
     public GameManager() {
         this.fileName = "./score.txt"; 
         this.users = new HashMap<>(); // initialize user data HashMap
-        this.getUsers(fileName); // load any exisiting users from file
+        getUsers(fileName);  // load any exisiting users from file
     }
 
-    public static void main(String[] args) {
-        GameManager game = new GameManager();
-        new HangmanFrame(game).setVisible(true);
-    }
+
     
     //load users from the file        
     public void getUsers(String fn)
