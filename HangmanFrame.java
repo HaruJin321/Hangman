@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowListener;
 
 public class HangmanFrame extends JFrame {
     private GameManager gameManager;
@@ -15,7 +16,9 @@ public class HangmanFrame extends JFrame {
     private JTextField inputField;
     private JLabel messageLabel;
     private JLabel scoreLabel;
-    private int maxGuess = 7;
+    private DifficultyStrategy difficultyStrategy;
+    private int maxGuess;
+
 
     public HangmanFrame(GameManager gameManager) 
     {
@@ -30,6 +33,8 @@ public class HangmanFrame extends JFrame {
         setSize(500, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        
+        
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -55,8 +60,9 @@ public class HangmanFrame extends JFrame {
         });
 
         add(panel);
-
         askUsername();
+
+
     }
 
     private void startNewGame() 
@@ -64,24 +70,64 @@ public class HangmanFrame extends JFrame {
 
         displayManager = new DisplayManager(currentUser);
         wordLabel.setText(displayManager.getGuessedLetters());
-        maxGuess = 7;
+        maxGuess = difficultyStrategy.getMaxGuesses();
+        messageLabel.setText("Enter a letter:");
+        updateScoreLabel();
 
     }
 
     
+    
     private void askUsername() {
-        String username = JOptionPane.showInputDialog(this, "Enter your username:");
-        if (username != null && !username.trim().isEmpty()) {
+        String username = null;
+        boolean validUsername = false;
+
+        while (!validUsername) {
+            username = JOptionPane.showInputDialog(this, "Enter your username:");
+
+            if (username == null) { // User canceled the input dialog
+                int option = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
+                if (option == JOptionPane.YES_OPTION) {
+                    System.exit(0);
+                }
+            } else if (!username.trim().isEmpty()) {
+                validUsername = true;
+            }
+        }
+
+        if (validUsername) {
             currentUser = gameManager.checkUser(username.toLowerCase());
             displayManager = new DisplayManager(currentUser);
-            //wordLabel.setText(displayManager.getGuessedLetters());
             updateScoreLabel();
-            startNewGame();
-        } else {
-            JOptionPane.showInputDialog(this, "Please enter your username");
-
+            chooseDifficulty();
         }
     }
+    
+    
+    
+    private void chooseDifficulty() {
+        Object[] options = {"Easy", "Medium", "Hard"};
+        int choice = JOptionPane.showOptionDialog(this, "Choose Difficulty Level", "Difficulty",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+        switch (choice) {
+            case 0:
+                difficultyStrategy = new EasyDifficulty();
+                break;
+            case 1:
+                difficultyStrategy = new MediumDifficulty();
+                break;
+            case 2:
+                difficultyStrategy = new HardDifficulty();
+                break;
+            default:
+                difficultyStrategy = new MediumDifficulty();
+        }
+        
+
+        startNewGame();
+    }
+    
     
     
 
@@ -139,7 +185,7 @@ public class HangmanFrame extends JFrame {
         
         if (option == JOptionPane.YES_OPTION) 
         {
-            startNewGame();
+            chooseDifficulty();
         } else {
             System.exit(0);
         }
