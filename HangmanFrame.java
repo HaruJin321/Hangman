@@ -39,6 +39,12 @@ public class HangmanFrame extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
+
+        //restart button
+        JButton restartButton = new JButton("Restart");
+        restartButton.addActionListener(e -> confirmRestart());
+        add(restartButton, BorderLayout.NORTH);
+
         wordLabel = new JLabel("_ _ _ _ _ _ _ _ _", SwingConstants.CENTER);
         wordLabel.setFont(new Font("Serif", Font.PLAIN, 24));
         panel.add(wordLabel, BorderLayout.CENTER);
@@ -77,6 +83,18 @@ public class HangmanFrame extends JFrame {
     }
 
     
+
+	
+	private void confirmRestart() {
+	    int option = JOptionPane.showConfirmDialog(this, "Are you sure you want to restart the game?", "Confirm Restart", JOptionPane.YES_NO_OPTION);
+	    if (option == JOptionPane.YES_OPTION) {
+	    	currentUser = null;
+	        difficultyStrategy = null;
+	        maxGuess = 0;
+	        askUsername();
+	        
+	    }
+	}
     
     private void askUsername() {
         String username = null;
