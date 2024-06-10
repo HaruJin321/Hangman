@@ -1,109 +1,106 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Hangman;
 
-/**
- *
- * @author harry
- */
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Scanner;
-import java.util.StringTokenizer;
 
-public class GameManager {
-    // HashMap to store user data 
+public class GameManager 
+{
+
+    private static GameManager instance;
     private final HashMap<String, User> users;
-    private final String fileName;
 
-    // constructor initialize file name and user data
-    public GameManager() {
-        this.fileName = "./score.txt"; 
-        this.users = new HashMap<>(); // initialize user data HashMap
-        getUsers(fileName);  // load any exisiting users from file
-    }
-
-
-    
-    //load users from the file        
-    public void getUsers(String fn)
+    private GameManager() 
     {
-        FileInputStream fin;
-        
-        try {
-            fin = new FileInputStream(fn);
-            
-            Scanner fileScanner = new Scanner(fin);
-            //Read user data and add to the users HashMap
-            while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine();
-                StringTokenizer st = new StringTokenizer(line);
-                
-                User u = new User(st.nextToken(), Integer.parseInt(st.nextToken()));
-                this.users.put(u.getUsername(), u);
+        this.users = new HashMap<>();
+        DatabaseManager.setupDatabase();
+        loadUsersDB();
+    }
+    
+    // synchronzied to ensure one instance is only
+    public static synchronized GameManager getInstance() //singleton pattern
+    {
+        if (instance == null) {
+            instance = new GameManager();
+        }
+        return instance;
+    }
+    private void loadUsersDB() 
+    {
+        String query = "SELECT username, score FROM Users"; //table selection
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement load = conn.prepareStatement(query);
+             ResultSet rs = load.executeQuery()) 
+        {
+            while (rs.next()) 
+            {
+                String username = rs.getString("username");
+                int score = rs.getInt("score");
+                User user = new User(username, score);
+                users.put(username, user);
             }
-            
-            fin.close();
-            
-        // handles IO/files not found exception
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex.getMessage());
-            
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+        } 
+        catch (SQLException e) 
+        {
+            e.printStackTrace();
         }
         
     }
-    
-    //method to check if the user exists or create a new user
-    public User checkUser(String un) 
+
+    public User checkUser(String username) 
     {
-        
-        User u;
-        
-        if (this.users.containsKey(un)) {
-            u = this.users.get(un);
-            //System.out.println("Welcome Back! Your current score is: " + u.getScore());
-            
-        } else { // if the user doesnt exist, create a new
-            u = new User(un, 0);
-            this.users.put(un, u); // add the new user to HashMap
+        User user = users.get(username);
+        if (user == null) { // creating user if donest exit in db
+            user = new User (username, 0);
+            users.put(username, user);
+            saveUserDB(user);
         }
-        
-        return u;
-        
+        return user;
     }
-    
-    
-    //method to update the user score and save to file
+
     public void updateScore(User user) 
     {
-        
-        this.users.put(user.getUsername(), user);
-        
-        try {
-            //opens file for writing
-            FileOutputStream fOut = new FileOutputStream(this.fileName);
-            PrintWriter pw = new PrintWriter(fOut);
-            // Write user data to the file
-            for (User u : this.users.values()) {
-                pw.println(u.getUsername() + " " + u.getScore());
-            }
+        users.put(user.getUsername(), user);
+        updateUserDB(user);
+    }
+
+    private void saveUserDB(User user) 
+    {
+        String insert = "INSERT INTO Users (username, score) VALUES (?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement save = conn.prepareStatement(insert)) 
+        {
+            save.setString(1, user.getUsername());
+            save.setInt(2, user.getScore());
+            save.executeUpdate();
             
-            pw.close();
-            
-        //Handles file not found exception    
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex.getMessage()); 
+        } 
+        catch (SQLException e) 
+        {
+            e.printStackTrace();
         }
+    }
+
+    private void updateUserDB(User user) 
+    {
         
-    }   
+        String update = "UPDATE Users SET score = ? WHERE username = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement updated = conn.prepareStatement(update)) 
+        {
+            updated.setInt(1, user.getScore());
+            updated.setString(2, user.getUsername());
+            updated.executeUpdate();
+            
+            
+        } 
+        catch (SQLException e) 
+        {
+            e.printStackTrace();
+        }
+    }
     
     
     
