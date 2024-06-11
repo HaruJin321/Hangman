@@ -186,6 +186,13 @@ public class HangmanFrame extends JFrame {
             return;
         }
 
+        if (displayManager.guessedLetterManager.isLetterGuessed(guess.charAt(0))) 
+	      {
+            messageLabel.setText("You've already guessed that letter. Try a different one.");
+            return;
+        }
+	    
+
         if (displayManager.updateGuessedLetters(guess)) {
             messageLabel.setText("Correct! You have " + maxGuess + " guesses left.");
         } else {
