@@ -10,9 +10,6 @@ public class InputManager {
     public String validateUserInput(String userInput) {
         userInput = userInput.toLowerCase();
         
-        //if (userInput.equals("0")) {
-        //    return "Game Closed";
-        //} 
         if (userInput.matches("[^a-zA-Z]")) {
             return "Error! Must guess a letter!";
         } 
